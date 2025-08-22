@@ -14,7 +14,168 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          coursera_connected: boolean | null
+          coursera_url: string | null
+          created_at: string
+          full_name: string | null
+          github_connected: boolean | null
+          github_url: string | null
+          id: string
+          linkedin_connected: boolean | null
+          linkedin_url: string | null
+          skills: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          coursera_connected?: boolean | null
+          coursera_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          github_connected?: boolean | null
+          github_url?: string | null
+          id?: string
+          linkedin_connected?: boolean | null
+          linkedin_url?: string | null
+          skills?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          coursera_connected?: boolean | null
+          coursera_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          github_connected?: boolean | null
+          github_url?: string | null
+          id?: string
+          linkedin_connected?: boolean | null
+          linkedin_url?: string | null
+          skills?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      progress: {
+        Row: {
+          category: string | null
+          created_at: string
+          current_level: number | null
+          id: string
+          skill_name: string
+          target_level: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          current_level?: number | null
+          id?: string
+          skill_name: string
+          target_level?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          current_level?: number | null
+          id?: string
+          skill_name?: string
+          target_level?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      roadmap_items: {
+        Row: {
+          category: string
+          completed: boolean | null
+          course_url: string | null
+          created_at: string
+          description: string | null
+          estimated_weeks: number | null
+          id: string
+          order_index: number | null
+          platform: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          completed?: boolean | null
+          course_url?: string | null
+          created_at?: string
+          description?: string | null
+          estimated_weeks?: number | null
+          id?: string
+          order_index?: number | null
+          platform?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          completed?: boolean | null
+          course_url?: string | null
+          created_at?: string
+          description?: string | null
+          estimated_weeks?: number | null
+          id?: string
+          order_index?: number | null
+          platform?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      todos: {
+        Row: {
+          completed: boolean | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          priority: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
