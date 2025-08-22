@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, UserPlus, LogIn } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Link } from "react-router-dom";
 
 export const DesktopHeader = () => {
   const isMobile = useIsMobile();
@@ -23,13 +24,17 @@ export const DesktopHeader = () => {
           </div>
           
           <div className="flex items-center gap-4">
-            <Button variant="outline" className="gap-2">
-              <LogIn className="h-4 w-4" />
-              Log In
+            <Button variant="outline" className="gap-2" asChild>
+              <Link to="/login">
+                <LogIn className="h-4 w-4" />
+                Log In
+              </Link>
             </Button>
-            <Button className="gap-2">
-              <UserPlus className="h-4 w-4" />
-              Sign Up
+            <Button className="gap-2" asChild>
+              <Link to="/signup">
+                <UserPlus className="h-4 w-4" />
+                Sign Up
+              </Link>
             </Button>
           </div>
         </div>
