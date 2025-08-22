@@ -1,41 +1,71 @@
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Search, UserPlus, LogIn } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { LogOut, Menu } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Link } from "react-router-dom";
 
 export const DesktopHeader = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
   const isMobile = useIsMobile();
 
-  if (isMobile) return null;
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate('/');
+    } catch (error: any) {
+      toast({
+        title: "Error signing out",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
-    <header className="bg-card border-b border-border sticky top-0 z-40">
-      <div className="container mx-auto px-6 py-4">
+    <header className="border-b bg-card">
+      <div className="container mx-auto px-4 md:px-6 py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <div className="text-2xl font-bold text-primary">CareerPath</div>
-            <nav className="hidden md:flex items-center gap-6">
-              <a href="#" className="text-foreground hover:text-primary transition-colors">Home</a>
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors">About</a>
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors">Features</a>
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors">Contact</a>
-            </nav>
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
+            <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
+              CP
+            </div>
+            <span className="font-bold text-lg">CareerPath</span>
           </div>
           
           <div className="flex items-center gap-4">
-            <Button variant="outline" className="gap-2" asChild>
-              <Link to="/login">
-                <LogIn className="h-4 w-4" />
-                Log In
-              </Link>
-            </Button>
-            <Button className="gap-2" asChild>
-              <Link to="/signup">
-                <UserPlus className="h-4 w-4" />
-                Sign Up
-              </Link>
-            </Button>
+            {user ? (
+              <>
+                {!isMobile && (
+                  <Button variant="ghost" onClick={() => navigate('/dashboard')}>
+                    Dashboard
+                  </Button>
+                )}
+                <Button variant="outline" onClick={handleLogout} className="gap-2">
+                  <LogOut className="h-4 w-4" />
+                  {isMobile ? '' : 'Logout'}
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button 
+                  variant="ghost" 
+                  onClick={() => navigate('/login')}
+                  size={isMobile ? "sm" : "default"}
+                >
+                  Sign In
+                </Button>
+                <Button 
+                  onClick={() => navigate('/signup')}
+                  size={isMobile ? "sm" : "default"}
+                >
+                  Get Started
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>

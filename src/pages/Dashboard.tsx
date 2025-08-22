@@ -233,8 +233,8 @@ export default function Dashboard() {
                 CP
               </div>
               <div>
-                <h1 className="text-xl font-bold text-foreground">Welcome back, {profile?.full_name || user?.email}</h1>
-                <p className="text-sm text-muted-foreground">Continue your career journey</p>
+                <h1 className="text-xl font-bold text-foreground">How's your day going, {profile?.full_name || user?.email?.split('@')[0]}? 👋</h1>
+                <p className="text-sm text-muted-foreground">What would you like to accomplish today?</p>
               </div>
             </div>
             <Button variant="outline" onClick={handleLogout} className="gap-2">
@@ -327,12 +327,62 @@ export default function Dashboard() {
                   <Upload className="h-5 w-5" />
                   Upload Curriculum
                 </CardTitle>
-                <CardDescription>Upload your curriculum as PDF</CardDescription>
+                <CardDescription>Upload your curriculum as PDF to get personalized recommendations</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full gap-2">
-                  <Upload className="h-4 w-4" />
-                  Choose PDF File
+                <input
+                  type="file"
+                  accept=".pdf"
+                  className="hidden"
+                  id="curriculum-upload"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      toast({
+                        title: "File uploaded",
+                        description: `${file.name} has been uploaded successfully.`,
+                      });
+                    }
+                  }}
+                />
+                <label htmlFor="curriculum-upload">
+                  <Button variant="outline" className="w-full gap-2 cursor-pointer" asChild>
+                    <span>
+                      <Upload className="h-4 w-4" />
+                      Choose PDF File
+                    </span>
+                  </Button>
+                </label>
+              </CardContent>
+            </Card>
+
+            {/* Daily Planner */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="h-5 w-5" />
+                  Plan Your Day
+                </CardTitle>
+                <CardDescription>Organize your learning goals and tasks</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="outline" size="sm" className="text-xs">
+                    Study Session
+                  </Button>
+                  <Button variant="outline" size="sm" className="text-xs">
+                    Practice Code
+                  </Button>
+                  <Button variant="outline" size="sm" className="text-xs">
+                    Read Articles
+                  </Button>
+                  <Button variant="outline" size="sm" className="text-xs">
+                    Network
+                  </Button>
+                </div>
+                <Button className="w-full gap-2">
+                  <Plus className="h-4 w-4" />
+                  Create Learning Plan
                 </Button>
               </CardContent>
             </Card>

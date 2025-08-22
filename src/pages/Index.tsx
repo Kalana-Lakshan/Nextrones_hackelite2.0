@@ -58,13 +58,16 @@ const Index = () => {
               Connect your LinkedIn, GitHub, and academic background to receive personalized career roadmaps and course recommendations
             </p>
             
-            {/* Search Bar */}
+            {/* Search Bar - Highlighted */}
             <div className="relative max-w-md mx-auto mb-8">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input 
-                placeholder="Search career paths, skills, or courses..." 
-                className="pl-10 py-3"
-              />
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 rounded-lg blur-sm"></div>
+              <div className="relative bg-card rounded-lg border-2 border-primary/30 shadow-lg">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary h-5 w-5" />
+                <Input 
+                  placeholder="Search career paths, skills, or courses..." 
+                  className="pl-10 py-4 bg-transparent border-0 text-base font-medium placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary"
+                />
+              </div>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -91,8 +94,14 @@ const Index = () => {
           </Card>
         </section>
 
-        {/* Trending News */}
-        <TrendingNews />
+        {/* Trending News - Eye-catching */}
+        <section className="container mx-auto px-4 md:px-6 mb-8">
+          <div className="bg-gradient-to-r from-primary/5 via-accent/10 to-primary/5 rounded-2xl p-1">
+            <div className="bg-card rounded-xl border border-primary/20 shadow-xl">
+              <TrendingNews />
+            </div>
+          </div>
+        </section>
 
         {/* Features Section */}
         <section className="container mx-auto px-4 md:px-6 py-8 md:py-16">
@@ -161,11 +170,21 @@ const Index = () => {
                 Join thousands of professionals who are already using AI to accelerate their career growth
               </CardDescription>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button variant="secondary" size="lg" className="gap-2">
+                <Button 
+                  variant="secondary" 
+                  size="lg" 
+                  className="gap-2"
+                  onClick={() => window.location.href = '/signup'}
+                >
                   <UserPlus className="h-4 w-4" />
                   Create Free Account
                 </Button>
-                <Button variant="outline" size="lg" className="bg-transparent border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10">
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="bg-transparent border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10"
+                  onClick={() => window.location.href = '/login'}
+                >
                   Learn More
                 </Button>
               </div>

@@ -1,5 +1,6 @@
 import { Home, MapIcon, Settings, BarChart3 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface MobileNavigationProps {
   activeTab: string;
@@ -8,8 +9,10 @@ interface MobileNavigationProps {
 
 export const MobileNavigation = ({ activeTab, onTabChange }: MobileNavigationProps) => {
   const isMobile = useIsMobile();
+  const { user } = useAuth();
 
-  if (!isMobile) return null;
+  // Only show mobile navigation for logged-in users
+  if (!isMobile || !user) return null;
 
   const navItems = [
     { id: "home", label: "Home", icon: Home },
