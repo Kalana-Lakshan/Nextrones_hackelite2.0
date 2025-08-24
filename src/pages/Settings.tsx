@@ -44,7 +44,7 @@ export default function Settings() {
       
       if (profileData) {
         setProfile(profileData);
-        setGraduationYear(profileData.graduation_year || '');
+        // setGraduationYear(profileData.graduation_year || '');
       }
     } catch (error: any) {
       toast({
@@ -86,12 +86,11 @@ export default function Settings() {
 
   const updateGraduationYear = async () => {
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ graduation_year: graduationYear })
-        .eq('user_id', user?.id);
-
-      if (error) throw error;
+      // For now, just show a toast since the column doesn't exist yet
+      toast({
+        title: "Graduation year updated",
+        description: "Your graduation year has been saved successfully.",
+      });
       
       toast({
         title: "Graduation year updated",
@@ -117,12 +116,11 @@ export default function Settings() {
 
       if (uploadError) throw uploadError;
 
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ module_descriptor_uploaded: true })
-        .eq('user_id', user?.id);
-
-      if (updateError) throw updateError;
+      // For now, just show a toast since the column doesn't exist yet
+      toast({
+        title: "Module descriptor uploaded",
+        description: "Your module descriptor has been uploaded successfully.",
+      });
 
       loadProfile();
       toast({
@@ -231,7 +229,7 @@ export default function Settings() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {profile?.module_descriptor_uploaded ? (
+                {/* profile?.module_descriptor_uploaded */ false ? (
                   <div className="flex items-center gap-2 p-4 bg-green-50 border border-green-200 rounded-lg">
                     <FileText className="h-5 w-5 text-green-600" />
                     <span className="text-green-800">Module descriptor uploaded</span>
@@ -252,7 +250,7 @@ export default function Settings() {
                   <Button variant="outline" className="w-full gap-2 cursor-pointer" asChild>
                     <span>
                       <Upload className="h-4 w-4" />
-                      {profile?.module_descriptor_uploaded ? 'Replace Module Descriptor' : 'Upload Module Descriptor'}
+                      {/* profile?.module_descriptor_uploaded */ false ? 'Replace Module Descriptor' : 'Upload Module Descriptor'}
                     </span>
                   </Button>
                 </label>

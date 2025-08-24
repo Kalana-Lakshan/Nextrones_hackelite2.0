@@ -23,9 +23,12 @@ export type Database = {
           full_name: string | null
           github_connected: boolean | null
           github_url: string | null
+          graduation_year: string | null
           id: string
           linkedin_connected: boolean | null
           linkedin_url: string | null
+          module_descriptor_uploaded: boolean | null
+          onboarding_completed: boolean | null
           skills: string[] | null
           updated_at: string
           user_id: string
@@ -38,9 +41,12 @@ export type Database = {
           full_name?: string | null
           github_connected?: boolean | null
           github_url?: string | null
+          graduation_year?: string | null
           id?: string
           linkedin_connected?: boolean | null
           linkedin_url?: string | null
+          module_descriptor_uploaded?: boolean | null
+          onboarding_completed?: boolean | null
           skills?: string[] | null
           updated_at?: string
           user_id: string
@@ -53,9 +59,12 @@ export type Database = {
           full_name?: string | null
           github_connected?: boolean | null
           github_url?: string | null
+          graduation_year?: string | null
           id?: string
           linkedin_connected?: boolean | null
           linkedin_url?: string | null
+          module_descriptor_uploaded?: boolean | null
+          onboarding_completed?: boolean | null
           skills?: string[] | null
           updated_at?: string
           user_id?: string

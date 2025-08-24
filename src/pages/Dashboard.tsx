@@ -4,26 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { 
-  CheckCircle, 
-  Circle, 
-  Plus, 
   Upload, 
-  Github, 
-  Linkedin, 
-  BookOpen, 
-  LogOut,
-  User,
   Target,
   Map,
-  ListTodo
+  LogOut
 } from 'lucide-react';
 
 export default function Dashboard() {
@@ -32,11 +19,7 @@ export default function Dashboard() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
-  const [todos, setTodos] = useState<any[]>([]);
   const [progress, setProgress] = useState<any[]>([]);
-  const [roadmap, setRoadmap] = useState<any[]>([]);
-  const [newTodo, setNewTodo] = useState('');
-  const [newSkill, setNewSkill] = useState('');
 
   useEffect(() => {
     if (!session) {
@@ -57,15 +40,6 @@ export default function Dashboard() {
       
       if (profileData) setProfile(profileData);
 
-      // Load todos
-      const { data: todosData } = await supabase
-        .from('todos')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false });
-      
-      if (todosData) setTodos(todosData);
-
       // Load progress
       const { data: progressData } = await supabase
         .from('progress')
@@ -74,14 +48,6 @@ export default function Dashboard() {
       
       if (progressData) setProgress(progressData);
 
-      // Load roadmap
-      const { data: roadmapData } = await supabase
-        .from('roadmap_items')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('order_index', { ascending: true });
-      
-      if (roadmapData) setRoadmap(roadmapData);
     } catch (error: any) {
       toast({
         title: "Error loading dashboard",
@@ -100,111 +66,6 @@ export default function Dashboard() {
     } catch (error: any) {
       toast({
         title: "Error signing out",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const addTodo = async () => {
-    if (!newTodo.trim()) return;
-    
-    try {
-      const { error } = await supabase
-        .from('todos')
-        .insert([{
-          user_id: user?.id,
-          title: newTodo,
-          completed: false
-        }]);
-
-      if (error) throw error;
-      
-      setNewTodo('');
-      loadDashboardData();
-      toast({
-        title: "Todo added",
-        description: "Your todo has been added successfully.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error adding todo",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const toggleTodo = async (todoId: string, completed: boolean) => {
-    try {
-      const { error } = await supabase
-        .from('todos')
-        .update({ completed: !completed })
-        .eq('id', todoId);
-
-      if (error) throw error;
-      loadDashboardData();
-    } catch (error: any) {
-      toast({
-        title: "Error updating todo",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const addSkill = async () => {
-    if (!newSkill.trim()) return;
-    
-    try {
-      const { error } = await supabase
-        .from('progress')
-        .insert([{
-          user_id: user?.id,
-          skill_name: newSkill,
-          current_level: 0,
-          target_level: 100,
-          category: 'general'
-        }]);
-
-      if (error) throw error;
-      
-      setNewSkill('');
-      loadDashboardData();
-      toast({
-        title: "Skill added",
-        description: "Your skill has been added to tracking.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error adding skill",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const connectAccount = async (platform: 'linkedin' | 'github' | 'coursera', url: string) => {
-    try {
-      const updateData: any = {};
-      updateData[`${platform}_connected`] = true;
-      updateData[`${platform}_url`] = url;
-
-      const { error } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('user_id', user?.id);
-
-      if (error) throw error;
-      
-      loadDashboardData();
-      toast({
-        title: "Account connected",
-        description: `Your ${platform} account has been connected successfully.`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error connecting account",
         description: error.message,
         variant: "destructive",
       });
@@ -246,172 +107,64 @@ export default function Dashboard() {
       </header>
 
       <div className="container mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Todos and Quick Actions */}
-          <div className="space-y-6">
-            {/* Todo List */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <ListTodo className="h-5 w-5" />
-                  Todo List
-                </CardTitle>
-                <CardDescription>Track your daily tasks and goals</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Add a new todo..."
-                    value={newTodo}
-                    onChange={(e) => setNewTodo(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && addTodo()}
-                  />
-                  <Button onClick={addTodo} size="sm">
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="space-y-2 max-h-60 overflow-y-auto">
-                  {todos.map((todo) => (
-                    <div 
-                      key={todo.id} 
-                      className="flex items-center gap-2 p-2 rounded-lg border bg-muted/50"
-                    >
-                      <button onClick={() => toggleTodo(todo.id, todo.completed)}>
-                        {todo.completed ? (
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <Circle className="h-4 w-4 text-muted-foreground" />
-                        )}
-                      </button>
-                      <span className={`flex-1 text-sm ${todo.completed ? 'line-through text-muted-foreground' : ''}`}>
-                        {todo.title}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+        <div className="max-w-6xl mx-auto space-y-8">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+            <p className="text-muted-foreground">Explore career opportunities and track your progress</p>
+          </div>
 
-            {/* Account Connections */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Account Connections</CardTitle>
-                <CardDescription>Connect your professional accounts</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <ConnectionButton
-                  icon={<Linkedin className="h-4 w-4" />}
-                  label="LinkedIn"
-                  connected={profile?.linkedin_connected}
-                  onConnect={(url) => connectAccount('linkedin', url)}
-                />
-                <ConnectionButton
-                  icon={<Github className="h-4 w-4" />}
-                  label="GitHub"
-                  connected={profile?.github_connected}
-                  onConnect={(url) => connectAccount('github', url)}
-                />
-                <ConnectionButton
-                  icon={<BookOpen className="h-4 w-4" />}
-                  label="Coursera"
-                  connected={profile?.coursera_connected}
-                  onConnect={(url) => connectAccount('coursera', url)}
-                />
-              </CardContent>
-            </Card>
-
-            {/* Upload Curriculum */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Upload className="h-5 w-5" />
-                  Upload Curriculum
-                </CardTitle>
-                <CardDescription>Upload your curriculum as PDF to get personalized recommendations</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <input
-                  type="file"
-                  accept=".pdf"
-                  className="hidden"
-                  id="curriculum-upload"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      toast({
-                        title: "File uploaded",
-                        description: `${file.name} has been uploaded successfully.`,
-                      });
-                    }
-                  }}
-                />
-                <label htmlFor="curriculum-upload">
-                  <Button variant="outline" className="w-full gap-2 cursor-pointer" asChild>
-                    <span>
-                      <Upload className="h-4 w-4" />
-                      Choose PDF File
-                    </span>
-                  </Button>
-                </label>
-              </CardContent>
-            </Card>
-
-            {/* Daily Planner */}
-            <Card>
+          {/* Career Exploration Options */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Target className="h-5 w-5" />
-                  Plan Your Day
+                  Field-wise Exploration
                 </CardTitle>
-                <CardDescription>Organize your learning goals and tasks</CardDescription>
+                <CardDescription>Explore opportunities by industry and field</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-2">
-                  <Button variant="outline" size="sm" className="text-xs">
-                    Study Session
-                  </Button>
-                  <Button variant="outline" size="sm" className="text-xs">
-                    Practice Code
-                  </Button>
-                  <Button variant="outline" size="sm" className="text-xs">
-                    Read Articles
-                  </Button>
-                  <Button variant="outline" size="sm" className="text-xs">
-                    Network
-                  </Button>
-                </div>
-                <Button className="w-full gap-2">
-                  <Plus className="h-4 w-4" />
-                  Create Learning Plan
-                </Button>
+              <CardContent>
+                <Button className="w-full">Explore Fields</Button>
+              </CardContent>
+            </Card>
+
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="h-5 w-5" />
+                  Job-wise Exploration
+                </CardTitle>
+                <CardDescription>Browse specific job roles and requirements</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button className="w-full">Browse Jobs</Button>
+              </CardContent>
+            </Card>
+
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="h-5 w-5" />
+                  Higher Studies
+                </CardTitle>
+                <CardDescription>Explore master's and PhD pathways</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button className="w-full">Explore Studies</Button>
               </CardContent>
             </Card>
           </div>
 
-          {/* Middle Column - Progress */}
-          <div className="space-y-6">
+          {/* Recent Activity */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="h-5 w-5" />
-                  Current Progress
-                </CardTitle>
-                <CardDescription>Track your skill development</CardDescription>
+                <CardTitle>Recent Progress</CardTitle>
+                <CardDescription>Your latest achievements and updates</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Add a skill to track..."
-                    value={newSkill}
-                    onChange={(e) => setNewSkill(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && addSkill()}
-                  />
-                  <Button onClick={addSkill} size="sm">
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
+              <CardContent>
                 <div className="space-y-4">
-                  {progress.map((skill) => (
+                  {progress.slice(0, 3).map((skill) => (
                     <div key={skill.id} className="space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium">{skill.skill_name}</span>
@@ -422,118 +175,36 @@ export default function Dashboard() {
                   ))}
                   {progress.length === 0 && (
                     <p className="text-center text-muted-foreground text-sm py-8">
-                      No skills tracked yet. Add one above to get started!
+                      No progress tracked yet. Connect your accounts to get started!
                     </p>
                   )}
                 </div>
               </CardContent>
             </Card>
-          </div>
 
-          {/* Right Column - Roadmap */}
-          <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Map className="h-5 w-5" />
-                  Learning Roadmap
-                </CardTitle>
-                <CardDescription>Your personalized career path</CardDescription>
+                <CardTitle>Quick Actions</CardTitle>
+                <CardDescription>Common tasks to boost your career</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {roadmap.map((item) => (
-                  <div 
-                    key={item.id} 
-                    className={`p-4 rounded-lg border ${item.completed ? 'bg-green-50 border-green-200' : 'bg-muted/50'}`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={`w-2 h-2 rounded-full mt-2 ${item.completed ? 'bg-green-500' : 'bg-muted-foreground'}`} />
-                      <div className="flex-1">
-                        <h4 className="font-medium text-sm">{item.title}</h4>
-                        <p className="text-xs text-muted-foreground mt-1">{item.description}</p>
-                        {item.platform && (
-                          <Badge variant="secondary" className="mt-2 text-xs">
-                            {item.platform}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                {roadmap.length === 0 && (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground text-sm mb-4">
-                      No roadmap items yet. Connect your accounts and upload your curriculum to generate a personalized roadmap!
-                    </p>
-                  </div>
-                )}
+              <CardContent className="space-y-3">
+                <Button variant="outline" className="w-full justify-start gap-2">
+                  <Upload className="h-4 w-4" />
+                  Upload Updated Resume
+                </Button>
+                <Button variant="outline" className="w-full justify-start gap-2">
+                  <Target className="h-4 w-4" />
+                  Set New Career Goal
+                </Button>
+                <Button variant="outline" className="w-full justify-start gap-2">
+                  <Map className="h-4 w-4" />
+                  Generate Learning Plan
+                </Button>
               </CardContent>
             </Card>
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-// Connection Button Component
-function ConnectionButton({ 
-  icon, 
-  label, 
-  connected, 
-  onConnect 
-}: { 
-  icon: React.ReactNode; 
-  label: string; 
-  connected: boolean; 
-  onConnect: (url: string) => void;
-}) {
-  const [url, setUrl] = useState('');
-
-  return (
-    <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/50">
-      <div className="flex items-center gap-2">
-        {icon}
-        <span className="text-sm font-medium">{label}</span>
-      </div>
-      {connected ? (
-        <Badge variant="secondary">Connected</Badge>
-      ) : (
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm">Connect</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Connect {label}</DialogTitle>
-              <DialogDescription>
-                Enter your {label} profile URL to connect your account
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="url">Profile URL</Label>
-                <Input
-                  id="url"
-                  placeholder={`Enter your ${label} profile URL`}
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                />
-              </div>
-              <Button 
-                onClick={() => {
-                  onConnect(url);
-                  setUrl('');
-                }} 
-                className="w-full"
-                disabled={!url.trim()}
-              >
-                Connect Account
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
     </div>
   );
 }

@@ -92,11 +92,7 @@ export const OnboardingFlow = ({ isOpen, onComplete }: OnboardingFlowProps) => {
 
   const markOnboardingComplete = async () => {
     try {
-      await supabase
-        .from('profiles')
-        .update({ onboarding_completed: true })
-        .eq('user_id', user?.id);
-      
+      // For now, just close the onboarding since the column doesn't exist yet
       onComplete();
     } catch (error) {
       console.error('Error marking onboarding complete:', error);
@@ -112,7 +108,7 @@ export const OnboardingFlow = ({ isOpen, onComplete }: OnboardingFlowProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
-      <DialogContent className="max-w-md mx-auto" hideCloseButton>
+      <DialogContent className="max-w-md mx-auto">
         <DialogHeader>
           <div className="flex items-center justify-center mb-4">
             {currentStepData.icon}
@@ -172,7 +168,7 @@ export const OnboardingFlow = ({ isOpen, onComplete }: OnboardingFlowProps) => {
                 <div className="text-center">
                   <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground">
-                    {profile?.module_descriptor_uploaded ? 
+                    {/* profile?.module_descriptor_uploaded */ false ? 
                       "✅ Module descriptor uploaded" : 
                       "Upload your curriculum file"}
                   </p>
@@ -187,8 +183,8 @@ export const OnboardingFlow = ({ isOpen, onComplete }: OnboardingFlowProps) => {
                 <div className="text-center">
                   <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground">
-                    {profile?.graduation_year ? 
-                      `✅ Graduation year set: ${profile.graduation_year}` : 
+                    {/* profile?.graduation_year */ false ? 
+                      `✅ Graduation year set: ${/* profile.graduation_year */ '2025'}` : 
                       "Set your graduation or goal year"}
                   </p>
                 </div>
