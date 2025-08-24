@@ -1,4 +1,4 @@
-import { Home, MapIcon, Settings, BarChart3 } from "lucide-react";
+import { Home, MapIcon, Settings, BarChart3, ListTodo } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -17,7 +17,7 @@ export const MobileNavigation = ({ activeTab, onTabChange }: MobileNavigationPro
   const navItems = [
     { id: "home", label: "Home", icon: Home },
     { id: "dashboard", label: "Dashboard", icon: BarChart3 },
-    { id: "roadmap", label: "Roadmap", icon: MapIcon },
+    { id: "todolist", label: "To-Do List", icon: ListTodo },
     { id: "settings", label: "Settings", icon: Settings },
   ];
 
