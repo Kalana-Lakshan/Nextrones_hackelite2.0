@@ -19,7 +19,7 @@ import {
   CalendarIcon,
   Edit
 } from 'lucide-react';
-import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { EnhancedCalendar } from '@/components/ui/enhanced-calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
 
@@ -161,6 +161,37 @@ export default function Settings() {
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
+      {/* Tab Navigation */}
+      <div className="bg-background border-b">
+        <div className="container mx-auto px-6">
+          <nav className="flex space-x-8">
+            <button 
+              onClick={() => navigate('/')}
+              className="py-4 px-1 border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Home
+            </button>
+            <button 
+              onClick={() => navigate('/dashboard')}
+              className="py-4 px-1 border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Dashboard
+            </button>
+            <button 
+              onClick={() => navigate('/todolist')}
+              className="py-4 px-1 border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors"
+            >
+              To-Do List
+            </button>
+            <button 
+              onClick={() => navigate('/settings')}
+              className="py-4 px-1 border-b-2 border-primary text-primary font-medium"
+            >
+              Settings
+            </button>
+          </nav>
+        </div>
+      </div>
       <div className="container mx-auto px-6 py-8">
         <div className="max-w-4xl mx-auto space-y-8">
           <div>
@@ -199,28 +230,13 @@ export default function Settings() {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
-                      <CalendarComponent
+                      <EnhancedCalendar
                         mode="single"
                         selected={graduationDate}
                         onSelect={setGraduationDate}
                         disabled={(date) => date < new Date()}
                         initialFocus
-                        className="pointer-events-auto"
                       />
-                      <div className="p-3 border-t">
-                        <div className="grid grid-cols-4 gap-2">
-                          {[2024, 2025, 2026, 2027].map((year) => (
-                            <Button
-                              key={year}
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setGraduationDate(new Date(year, 5, 1))}
-                            >
-                              {year}
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
                     </PopoverContent>
                   </Popover>
                   <Button onClick={updateGraduationDate} disabled={!graduationDate}>

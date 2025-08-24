@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar } from '@/components/ui/calendar';
+import { EnhancedCalendar } from '@/components/ui/enhanced-calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { format, addMonths, addWeeks } from 'date-fns';
@@ -371,28 +371,13 @@ export const RoadmapGenerator = ({ jobData, onBack, onGenerateTodoList }: Roadma
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
+                <EnhancedCalendar
                   mode="single"
                   selected={graduationDate}
                   onSelect={(date) => date && setGraduationDate(date)}
                   disabled={(date) => date < new Date()}
                   initialFocus
-                  className="pointer-events-auto"
                 />
-                <div className="p-3 border-t">
-                  <div className="grid grid-cols-4 gap-2">
-                    {[2024, 2025, 2026, 2027].map((year) => (
-                      <Button
-                        key={year}
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setGraduationDate(new Date(year, 5, 1))}
-                      >
-                        {year}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
               </PopoverContent>
             </Popover>
           </div>

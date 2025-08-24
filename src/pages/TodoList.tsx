@@ -127,6 +127,37 @@ export default function TodoList() {
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
+      {/* Tab Navigation */}
+      <div className="bg-background border-b">
+        <div className="container mx-auto px-6">
+          <nav className="flex space-x-8">
+            <button 
+              onClick={() => navigate('/')}
+              className="py-4 px-1 border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Home
+            </button>
+            <button 
+              onClick={() => navigate('/dashboard')}
+              className="py-4 px-1 border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Dashboard
+            </button>
+            <button 
+              onClick={() => navigate('/todolist')}
+              className="py-4 px-1 border-b-2 border-primary text-primary font-medium"
+            >
+              To-Do List
+            </button>
+            <button 
+              onClick={() => navigate('/settings')}
+              className="py-4 px-1 border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Settings
+            </button>
+          </nav>
+        </div>
+      </div>
       <div className="container mx-auto px-6 py-8">
         <div className="max-w-6xl mx-auto space-y-8">
           <div>
