@@ -6,11 +6,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { JobExploration } from '@/components/JobExploration';
+import { RoadmapGenerator } from '@/components/RoadmapGenerator';
+import { OnboardingFlow } from '@/components/OnboardingFlow';
 import { 
   Upload, 
   Target,
   Map,
-  LogOut
+  LogOut,
+  Sparkles,
+  TrendingUp,
+  Calendar
 } from 'lucide-react';
 
 export default function Dashboard() {
@@ -20,6 +26,9 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [progress, setProgress] = useState<any[]>([]);
+  const [currentView, setCurrentView] = useState<'dashboard' | 'exploration' | 'roadmap'>('dashboard');
+  const [selectedJobData, setSelectedJobData] = useState<any>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     if (!session) {
@@ -28,6 +37,13 @@ export default function Dashboard() {
     }
     loadDashboardData();
   }, [session, navigate]);
+
+  useEffect(() => {
+    // Check if user needs onboarding
+    if (profile && !profile.onboarding_completed) {
+      setShowOnboarding(true);
+    }
+  }, [profile]);
 
   const loadDashboardData = async () => {
     try {
@@ -59,6 +75,78 @@ export default function Dashboard() {
     }
   };
 
+  const handleExploreCareer = () => {
+    setCurrentView('exploration');
+  };
+
+  const handleGenerateRoadmap = (jobData: any) => {
+    setSelectedJobData(jobData);
+    setCurrentView('roadmap');
+  };
+
+  const handleGenerateTodoList = async (roadmapData: any) => {
+    try {
+      // Create roadmap items in database
+      const roadmapItems = roadmapData.roadmapItems.map((item: any) => ({
+        user_id: user?.id,
+        title: item.title,
+        description: item.description,
+        category: item.category,
+        platform: item.platform,
+        estimated_weeks: Math.ceil(item.estimatedHours / 10), // Rough estimate
+        order_index: item.id
+      }));
+
+      const { error: roadmapError } = await supabase
+        .from('roadmap_items')
+        .insert(roadmapItems);
+
+      if (roadmapError) throw roadmapError;
+
+      // Create detailed todos
+      const todos = roadmapData.roadmapItems.flatMap((item: any) => [
+        {
+          user_id: user?.id,
+          title: `Start: ${item.title}`,
+          description: item.description,
+          due_date: item.deadline,
+          priority: 'high'
+        },
+        {
+          user_id: user?.id,
+          title: `Complete: ${item.title}`,
+          description: `Finish all requirements for ${item.title}`,
+          due_date: item.deadline,
+          priority: 'medium'
+        }
+      ]);
+
+      const { error: todosError } = await supabase
+        .from('todos')
+        .insert(todos);
+
+      if (todosError) throw todosError;
+
+      toast({
+        title: "To-Do List Generated!",
+        description: "Your personalized learning plan has been created. Check the To-Do List tab.",
+      });
+
+      navigate('/todo-list');
+    } catch (error: any) {
+      toast({
+        title: "Error generating todo list",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+    navigate('/settings');
+  };
+
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
@@ -78,6 +166,38 @@ export default function Dashboard() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
           <p className="mt-4 text-muted-foreground">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Render different views based on current state
+  if (currentView === 'exploration') {
+    return (
+      <div className="min-h-screen bg-gradient-subtle">
+        <div className="container mx-auto px-6 py-8">
+          <div className="max-w-6xl mx-auto">
+            <JobExploration 
+              onBack={() => setCurrentView('dashboard')}
+              onGenerateRoadmap={handleGenerateRoadmap}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (currentView === 'roadmap' && selectedJobData) {
+    return (
+      <div className="min-h-screen bg-gradient-subtle">
+        <div className="container mx-auto px-6 py-8">
+          <div className="max-w-6xl mx-auto">
+            <RoadmapGenerator 
+              jobData={selectedJobData}
+              onBack={() => setCurrentView('exploration')}
+              onGenerateTodoList={handleGenerateTodoList}
+            />
+          </div>
         </div>
       </div>
     );
@@ -113,44 +233,45 @@ export default function Dashboard() {
             <p className="text-muted-foreground">Explore career opportunities and track your progress</p>
           </div>
 
-          {/* Career Exploration Options */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow">
+          {/* Quick Start Actions */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]" onClick={handleExploreCareer}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Target className="h-5 w-5" />
-                  Field-wise Exploration
+                  <Sparkles className="h-5 w-5" />
+                  Start Career Exploration
                 </CardTitle>
-                <CardDescription>Explore opportunities by industry and field</CardDescription>
+                <CardDescription>
+                  Discover opportunities that match your skills and interests
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button className="w-full">Explore Fields</Button>
+                <Button className="w-full gap-2">
+                  Explore Careers
+                  <Target className="h-4 w-4" />
+                </Button>
               </CardContent>
             </Card>
 
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow">
+            <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Target className="h-5 w-5" />
-                  Job-wise Exploration
+                  <TrendingUp className="h-5 w-5" />
+                  Daily Planner
                 </CardTitle>
-                <CardDescription>Browse specific job roles and requirements</CardDescription>
+                <CardDescription>
+                  Plan your learning activities for today
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <Button className="w-full">Browse Jobs</Button>
-              </CardContent>
-            </Card>
-
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="h-5 w-5" />
-                  Higher Studies
-                </CardTitle>
-                <CardDescription>Explore master's and PhD pathways</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button className="w-full">Explore Studies</Button>
+              <CardContent className="space-y-3">
+                <div className="text-sm">
+                  <p className="font-medium">Today's Focus:</p>
+                  <p className="text-muted-foreground">No active learning plan yet</p>
+                </div>
+                <Button variant="outline" className="w-full gap-2" onClick={() => navigate('/todo-list')}>
+                  <Calendar className="h-4 w-4" />
+                  View To-Do List
+                </Button>
               </CardContent>
             </Card>
           </div>
@@ -205,6 +326,12 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Onboarding Flow */}
+      <OnboardingFlow 
+        isOpen={showOnboarding} 
+        onComplete={handleOnboardingComplete}
+      />
     </div>
   );
 }

@@ -92,7 +92,12 @@ export const OnboardingFlow = ({ isOpen, onComplete }: OnboardingFlowProps) => {
 
   const markOnboardingComplete = async () => {
     try {
-      // For now, just close the onboarding since the column doesn't exist yet
+      const { error } = await supabase
+        .from('profiles')
+        .update({ onboarding_completed: true })
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
       onComplete();
     } catch (error) {
       console.error('Error marking onboarding complete:', error);
@@ -168,7 +173,7 @@ export const OnboardingFlow = ({ isOpen, onComplete }: OnboardingFlowProps) => {
                 <div className="text-center">
                   <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground">
-                    {/* profile?.module_descriptor_uploaded */ false ? 
+                    {profile?.module_descriptor_uploaded ? 
                       "✅ Module descriptor uploaded" : 
                       "Upload your curriculum file"}
                   </p>
@@ -183,8 +188,8 @@ export const OnboardingFlow = ({ isOpen, onComplete }: OnboardingFlowProps) => {
                 <div className="text-center">
                   <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground">
-                    {/* profile?.graduation_year */ false ? 
-                      `✅ Graduation year set: ${/* profile.graduation_year */ '2025'}` : 
+                    {profile?.graduation_year ? 
+                      `✅ Graduation year set: ${profile.graduation_year}` : 
                       "Set your graduation or goal year"}
                   </p>
                 </div>
