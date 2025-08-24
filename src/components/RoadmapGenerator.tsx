@@ -6,6 +6,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { format, addMonths, addWeeks } from 'date-fns';
+import { FreeTimeScheduler } from './FreeTimeScheduler';
 import { 
   ArrowLeft, 
   Calendar as CalendarIcon, 
@@ -26,7 +27,9 @@ interface RoadmapGeneratorProps {
 export const RoadmapGenerator = ({ jobData, onBack, onGenerateTodoList }: RoadmapGeneratorProps) => {
   const [showRoadmap, setShowRoadmap] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showScheduler, setShowScheduler] = useState(false);
   const [graduationDate, setGraduationDate] = useState<Date>(new Date('2025-06-01'));
+  const [freeTimeSchedule, setFreeTimeSchedule] = useState<any[]>([]);
 
   const generateRoadmapItems = () => {
     const now = new Date();
@@ -41,7 +44,11 @@ export const RoadmapGenerator = ({ jobData, onBack, onGenerateTodoList }: Roadma
         deadline: format(addWeeks(now, 6), 'yyyy-MM-dd'),
         estimatedHours: 40,
         platform: 'Free Resources',
-        skills: ['JavaScript', 'ES6+', 'Async Programming']
+        skills: ['JavaScript', 'ES6+', 'Async Programming'],
+        resources: [
+          { type: 'course', title: 'JavaScript Fundamentals', url: 'https://javascript.info/' },
+          { type: 'video', title: 'Modern JavaScript Tutorial', url: 'https://www.youtube.com/watch?v=hdI2bqOjy3c' }
+        ]
       },
       {
         id: 2,
@@ -51,7 +58,11 @@ export const RoadmapGenerator = ({ jobData, onBack, onGenerateTodoList }: Roadma
         deadline: format(addMonths(now, 2), 'yyyy-MM-dd'),
         estimatedHours: 60,
         platform: 'Coursera',
-        skills: ['React', 'JSX', 'State Management']
+        skills: ['React', 'JSX', 'State Management'],
+        resources: [
+          { type: 'course', title: 'React - The Complete Guide', url: 'https://www.coursera.org/learn/react' },
+          { type: 'documentation', title: 'React Official Docs', url: 'https://react.dev/' }
+        ]
       },
       {
         id: 3,
@@ -61,7 +72,11 @@ export const RoadmapGenerator = ({ jobData, onBack, onGenerateTodoList }: Roadma
         deadline: format(addMonths(now, 4), 'yyyy-MM-dd'),
         estimatedHours: 80,
         platform: 'GitHub',
-        skills: ['Project Management', 'Version Control', 'Deployment']
+        skills: ['Project Management', 'Version Control', 'Deployment'],
+        resources: [
+          { type: 'guide', title: 'GitHub Project Ideas', url: 'https://github.com/karan/Projects' },
+          { type: 'tutorial', title: 'Git & GitHub Tutorial', url: 'https://www.youtube.com/watch?v=RGOj5yH7evk' }
+        ]
       },
       {
         id: 4,
@@ -71,7 +86,11 @@ export const RoadmapGenerator = ({ jobData, onBack, onGenerateTodoList }: Roadma
         deadline: format(addMonths(now, 3), 'yyyy-MM-dd'),
         estimatedHours: 20,
         platform: 'LinkedIn Learning',
-        skills: ['Communication', 'Presentation', 'Technical Writing']
+        skills: ['Communication', 'Presentation', 'Technical Writing'],
+        resources: [
+          { type: 'course', title: 'Effective Communication', url: 'https://www.linkedin.com/learning/effective-communication' },
+          { type: 'book', title: 'Technical Writing Guide', url: 'https://developers.google.com/tech-writing' }
+        ]
       },
       {
         id: 5,
@@ -81,7 +100,11 @@ export const RoadmapGenerator = ({ jobData, onBack, onGenerateTodoList }: Roadma
         deadline: format(addMonths(now, 5), 'yyyy-MM-dd'),
         estimatedHours: 30,
         platform: 'Coursera',
-        skills: ['HTML5', 'CSS3', 'JavaScript', 'React']
+        skills: ['HTML5', 'CSS3', 'JavaScript', 'React'],
+        resources: [
+          { type: 'certification', title: 'Frontend Development Certificate', url: 'https://www.coursera.org/professional-certificates/meta-front-end-developer' },
+          { type: 'practice', title: 'Frontend Mentor Challenges', url: 'https://www.frontendmentor.io/' }
+        ]
       }
     ];
 
@@ -95,16 +118,22 @@ export const RoadmapGenerator = ({ jobData, onBack, onGenerateTodoList }: Roadma
   };
 
   const handleCreateTodoList = () => {
-    setShowConfirmDialog(true);
+    setShowScheduler(true);
   };
 
   const confirmTodoGeneration = () => {
     onGenerateTodoList({
       job: jobData.job,
       roadmapItems: roadmapItems,
-      graduationDate: graduationDate
+      graduationDate: graduationDate,
+      freeTimeSchedule: freeTimeSchedule
     });
     setShowConfirmDialog(false);
+  };
+
+  const handleScheduleSet = (schedule: any[]) => {
+    setFreeTimeSchedule(schedule);
+    setShowConfirmDialog(true);
   };
 
   const getTotalEstimatedHours = () => {
@@ -197,18 +226,35 @@ export const RoadmapGenerator = ({ jobData, onBack, onGenerateTodoList }: Roadma
                         </Badge>
                       ))}
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <CalendarIcon className="h-3 w-3" />
-                        Complete by {format(new Date(item.deadline), 'MMM dd, yyyy')}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <CalendarIcon className="h-3 w-3" />
+                          Complete by {format(new Date(item.deadline), 'MMM dd, yyyy')}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {item.estimatedHours} hours
+                        </div>
+                        <Badge variant="secondary" className="text-xs">
+                          {item.platform}
+                        </Badge>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {item.estimatedHours} hours
-                      </div>
-                      <Badge variant="secondary" className="text-xs">
-                        {item.platform}
-                      </Badge>
+                      {item.resources && (
+                        <div className="flex flex-wrap gap-2">
+                          {item.resources.map((resource: any, idx: number) => (
+                            <a
+                              key={idx}
+                              href={resource.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded hover:bg-blue-100 transition-colors"
+                            >
+                              {resource.type}: {resource.title}
+                            </a>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -264,6 +310,13 @@ export const RoadmapGenerator = ({ jobData, onBack, onGenerateTodoList }: Roadma
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Free Time Scheduler */}
+        <FreeTimeScheduler
+          isOpen={showScheduler}
+          onClose={() => setShowScheduler(false)}
+          onScheduleSet={handleScheduleSet}
+        />
       </div>
     );
   }
@@ -324,7 +377,22 @@ export const RoadmapGenerator = ({ jobData, onBack, onGenerateTodoList }: Roadma
                   onSelect={(date) => date && setGraduationDate(date)}
                   disabled={(date) => date < new Date()}
                   initialFocus
+                  className="pointer-events-auto"
                 />
+                <div className="p-3 border-t">
+                  <div className="grid grid-cols-4 gap-2">
+                    {[2024, 2025, 2026, 2027].map((year) => (
+                      <Button
+                        key={year}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setGraduationDate(new Date(year, 5, 1))}
+                      >
+                        {year}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
               </PopoverContent>
             </Popover>
           </div>

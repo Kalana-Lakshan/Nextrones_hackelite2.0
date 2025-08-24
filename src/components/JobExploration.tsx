@@ -124,10 +124,14 @@ export const JobExploration = ({ onBack, onGenerateRoadmap }: JobExplorationProp
   };
 
   const handleGenerateRoadmap = () => {
-    onGenerateRoadmap({
-      job: selectedJob,
-      analysis: mockJobAnalysis
-    });
+    const jobData = { job: selectedJob, analysis: mockJobAnalysis };
+    
+    // Save job to storage
+    if (typeof (window as any).saveJobToStorage === 'function') {
+      (window as any).saveJobToStorage(jobData);
+    }
+    
+    onGenerateRoadmap(jobData);
   };
 
   if (showJobAnalysis && selectedJob) {

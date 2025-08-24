@@ -9,6 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { JobExploration } from '@/components/JobExploration';
 import { RoadmapGenerator } from '@/components/RoadmapGenerator';
 import { OnboardingFlow } from '@/components/OnboardingFlow';
+import { JobStorage } from '@/components/JobStorage';
+import { QuickActions } from '@/components/QuickActions';
 import { 
   Upload, 
   Target,
@@ -86,8 +88,10 @@ export default function Dashboard() {
 
   const handleGenerateTodoList = async (roadmapData: any) => {
     try {
+      const { job, roadmapItems, graduationDate, freeTimeSchedule } = roadmapData;
+      
       // Create roadmap items in database
-      const roadmapItems = roadmapData.roadmapItems.map((item: any) => ({
+      const roadmapItemsToInsert = roadmapItems.map((item: any) => ({
         user_id: user?.id,
         title: item.title,
         description: item.description,
@@ -99,12 +103,12 @@ export default function Dashboard() {
 
       const { error: roadmapError } = await supabase
         .from('roadmap_items')
-        .insert(roadmapItems);
+        .insert(roadmapItemsToInsert);
 
       if (roadmapError) throw roadmapError;
 
       // Create detailed todos
-      const todos = roadmapData.roadmapItems.flatMap((item: any) => [
+      const todos = roadmapItems.flatMap((item: any) => [
         {
           user_id: user?.id,
           title: `Start: ${item.title}`,
@@ -233,48 +237,26 @@ export default function Dashboard() {
             <p className="text-muted-foreground">Explore career opportunities and track your progress</p>
           </div>
 
-          {/* Quick Start Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]" onClick={handleExploreCareer}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Sparkles className="h-5 w-5" />
-                  Start Career Exploration
-                </CardTitle>
-                <CardDescription>
-                  Discover opportunities that match your skills and interests
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button className="w-full gap-2">
-                  Explore Careers
-                  <Target className="h-4 w-4" />
-                </Button>
-              </CardContent>
-            </Card>
+          {/* Quick Actions */}
+          <QuickActions 
+            onExploreCareer={handleExploreCareer}
+            onViewTodos={() => navigate('/todo-list')}
+            progress={{
+              overall: progress.length > 0 ? Math.round(progress.reduce((acc, p) => acc + p.current_level, 0) / progress.length) : 0,
+              completed: progress.filter(p => p.current_level >= p.target_level).length,
+              remaining: progress.filter(p => p.current_level < p.target_level).length,
+              upcomingTasks: []
+            }}
+          />
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5" />
-                  Daily Planner
-                </CardTitle>
-                <CardDescription>
-                  Plan your learning activities for today
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="text-sm">
-                  <p className="font-medium">Today's Focus:</p>
-                  <p className="text-muted-foreground">No active learning plan yet</p>
-                </div>
-                <Button variant="outline" className="w-full gap-2" onClick={() => navigate('/todo-list')}>
-                  <Calendar className="h-4 w-4" />
-                  View To-Do List
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+          {/* Job Storage */}
+          <JobStorage 
+            onSelectJob={(jobData) => {
+              setSelectedJobData(jobData);
+              setCurrentView('roadmap');
+            }}
+            onGenerateRoadmap={handleGenerateRoadmap}
+          />
 
           {/* Recent Activity */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

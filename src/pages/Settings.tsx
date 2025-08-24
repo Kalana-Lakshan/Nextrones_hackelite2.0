@@ -15,8 +15,13 @@ import {
   Upload, 
   User,
   Calendar,
-  FileText
+  FileText,
+  CalendarIcon,
+  Edit
 } from 'lucide-react';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { format } from 'date-fns';
 
 export default function Settings() {
   const { user, session } = useAuth();
@@ -24,7 +29,7 @@ export default function Settings() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
-  const [graduationYear, setGraduationYear] = useState('');
+  const [graduationDate, setGraduationDate] = useState<Date>();
 
   useEffect(() => {
     if (!session) {
@@ -44,7 +49,9 @@ export default function Settings() {
       
       if (profileData) {
         setProfile(profileData);
-        setGraduationYear(profileData.graduation_year || '');
+        if (profileData.graduation_year) {
+          setGraduationDate(new Date(profileData.graduation_year));
+        }
       }
     } catch (error: any) {
       toast({
@@ -84,23 +91,25 @@ export default function Settings() {
     }
   };
 
-  const updateGraduationYear = async () => {
+  const updateGraduationDate = async () => {
+    if (!graduationDate) return;
+    
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({ graduation_year: graduationYear })
+        .update({ graduation_year: graduationDate.toISOString() })
         .eq('user_id', user?.id);
 
       if (error) throw error;
 
       loadProfile();
       toast({
-        title: "Graduation year updated",
-        description: "Your graduation year has been saved successfully.",
+        title: "Graduation date updated",
+        description: "Your graduation date has been saved successfully.",
       });
     } catch (error: any) {
       toast({
-        title: "Error updating graduation year",
+        title: "Error updating graduation date",
         description: error.message,
         variant: "destructive",
       });
@@ -179,16 +188,45 @@ export default function Settings() {
                   <Input id="full_name" value={profile?.full_name || ''} disabled />
                 </div>
               </div>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Graduation Year (e.g., 2025)"
-                  value={graduationYear}
-                  onChange={(e) => setGraduationYear(e.target.value)}
-                />
-                <Button onClick={updateGraduationYear}>
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Save
-                </Button>
+              <div className="space-y-2">
+                <Label>Graduation or Goal Year</Label>
+                <div className="flex gap-2">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="flex-1 justify-start">
+                        <CalendarIcon className="h-4 w-4 mr-2" />
+                        {graduationDate ? format(graduationDate, 'PPP') : 'Select graduation date'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={graduationDate}
+                        onSelect={setGraduationDate}
+                        disabled={(date) => date < new Date()}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                      <div className="p-3 border-t">
+                        <div className="grid grid-cols-4 gap-2">
+                          {[2024, 2025, 2026, 2027].map((year) => (
+                            <Button
+                              key={year}
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setGraduationDate(new Date(year, 5, 1))}
+                            >
+                              {year}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                  <Button onClick={updateGraduationDate} disabled={!graduationDate}>
+                    Save
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -204,18 +242,21 @@ export default function Settings() {
                 icon={<Linkedin className="h-4 w-4" />}
                 label="LinkedIn"
                 connected={profile?.linkedin_connected}
+                currentUrl={profile?.linkedin_url}
                 onConnect={(url) => connectAccount('linkedin', url)}
               />
               <ConnectionButton
                 icon={<Github className="h-4 w-4" />}
                 label="GitHub"
                 connected={profile?.github_connected}
+                currentUrl={profile?.github_url}
                 onConnect={(url) => connectAccount('github', url)}
               />
               <ConnectionButton
                 icon={<BookOpen className="h-4 w-4" />}
                 label="Coursera"
                 connected={profile?.coursera_connected}
+                currentUrl={profile?.coursera_url}
                 onConnect={(url) => connectAccount('coursera', url)}
               />
             </CardContent>
@@ -270,62 +311,96 @@ function ConnectionButton({
   icon, 
   label, 
   connected, 
+  currentUrl,
   onConnect 
 }: { 
   icon: React.ReactNode; 
   label: string; 
   connected: boolean; 
+  currentUrl?: string;
   onConnect: (url: string) => void;
 }) {
   const [url, setUrl] = useState('');
+  const [showDialog, setShowDialog] = useState(false);
 
   return (
     <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/50">
       <div className="flex items-center gap-3">
         {icon}
         <span className="font-medium">{label}</span>
+        {connected && currentUrl && (
+          <span className="text-xs text-muted-foreground truncate max-w-[200px]">
+            {currentUrl}
+          </span>
+        )}
       </div>
-      {connected ? (
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-          <span className="text-sm text-green-600">Connected</span>
-        </div>
-      ) : (
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="outline">Connect</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Connect {label}</DialogTitle>
-              <DialogDescription>
-                Enter your {label} profile URL to connect your account
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="url">Profile URL</Label>
-                <Input
-                  id="url"
-                  placeholder={`Enter your ${label} profile URL`}
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                />
-              </div>
+      <div className="flex items-center gap-2">
+        {connected ? (
+          <>
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            <span className="text-sm text-green-600">Connected</span>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => {
+                setUrl(currentUrl || '');
+                setShowDialog(true);
+              }}
+            >
+              <Edit className="h-3 w-3" />
+            </Button>
+          </>
+        ) : (
+          <Button variant="outline" onClick={() => setShowDialog(true)}>
+            Connect
+          </Button>
+        )}
+      </div>
+      
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{connected ? 'Update' : 'Connect'} {label}</DialogTitle>
+            <DialogDescription>
+              {connected ? 'Update your' : 'Enter your'} {label} profile URL
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="url">Profile URL</Label>
+              <Input
+                id="url"
+                placeholder={`Enter your ${label} profile URL`}
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  setShowDialog(false);
+                  setUrl('');
+                }}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
               <Button 
                 onClick={() => {
                   onConnect(url);
+                  setShowDialog(false);
                   setUrl('');
                 }} 
-                className="w-full"
+                className="flex-1"
                 disabled={!url.trim()}
               >
-                Connect Account
+                {connected ? 'Update' : 'Connect'} Account
               </Button>
             </div>
-          </DialogContent>
-        </Dialog>
-      )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

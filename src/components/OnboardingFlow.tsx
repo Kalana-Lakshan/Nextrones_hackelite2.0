@@ -84,7 +84,10 @@ export const OnboardingFlow = ({ isOpen, onComplete }: OnboardingFlowProps) => {
     if (currentStep === 1 || currentStep === 2 || currentStep === 3) {
       // These steps require going to settings
       onComplete();
-      // In a real app, you'd navigate to settings with a specific tab
+      // Navigate to settings for configuration steps
+    } else if (currentStep === steps.length - 1) {
+      // Final step - go to dashboard
+      markOnboardingComplete();
     } else {
       handleNext();
     }
@@ -98,7 +101,13 @@ export const OnboardingFlow = ({ isOpen, onComplete }: OnboardingFlowProps) => {
         .eq('user_id', user?.id);
 
       if (error) throw error;
-      onComplete();
+      
+      // Navigate to dashboard for the final step
+      if (currentStep === steps.length - 1) {
+        window.location.href = '/dashboard';
+      } else {
+        onComplete();
+      }
     } catch (error) {
       console.error('Error marking onboarding complete:', error);
       onComplete(); // Still close the flow
@@ -111,8 +120,10 @@ export const OnboardingFlow = ({ isOpen, onComplete }: OnboardingFlowProps) => {
 
   const currentStepData = steps[currentStep];
 
+  const canClose = currentStep === steps.length - 1; // Only allow closing on the final step
+
   return (
-    <Dialog open={isOpen} onOpenChange={() => {}}>
+    <Dialog open={isOpen} onOpenChange={canClose ? () => onComplete() : undefined}>
       <DialogContent className="max-w-md mx-auto">
         <DialogHeader>
           <div className="flex items-center justify-center mb-4">
