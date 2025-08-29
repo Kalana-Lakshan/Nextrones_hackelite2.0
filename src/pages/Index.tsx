@@ -7,14 +7,10 @@ import { DesktopHeader } from "@/components/DesktopHeader";
 import { MobileNavigation } from "@/components/MobileNavigation";
 import { TrendingNews } from "@/components/TrendingNews";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("home");
   const isMobile = useIsMobile();
-  const { user } = useAuth();
-  const navigate = useNavigate();
 
   const features = [
     {
@@ -49,40 +45,6 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <DesktopHeader />
-      
-      {/* Tab Navigation - only show if user is logged in */}
-      {user && (
-        <div className="bg-background border-b">
-          <div className="container mx-auto px-6">
-            <nav className="flex space-x-8">
-              <button 
-                onClick={() => navigate('/')}
-                className="py-4 px-1 border-b-2 border-primary text-primary font-medium"
-              >
-                Home
-              </button>
-              <button 
-                onClick={() => navigate('/dashboard')}
-                className="py-4 px-1 border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Dashboard
-              </button>
-              <button 
-                onClick={() => navigate('/todolist')}
-                className="py-4 px-1 border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors"
-              >
-                To-Do List
-              </button>
-              <button 
-                onClick={() => navigate('/settings')}
-                className="py-4 px-1 border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Settings
-              </button>
-            </nav>
-          </div>
-        </div>
-      )}
       
       <main className={`${isMobile ? 'pb-20' : ''}`}>
         {/* Hero Section */}
