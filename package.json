@@ -81,5 +81,18 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.38.0",
     "vite": "^5.4.19"
-  }
+  },
+  "description": "**URL**: https://lovable.dev/projects/e0506977-0524-451a-ac70-4519c13ae6f6",
+  "main": "eslint.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kalana-Lakshan/learn-roadmap-genie.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Kalana-Lakshan/learn-roadmap-genie/issues"
+  },
+  "homepage": "https://github.com/Kalana-Lakshan/learn-roadmap-genie#readme"
 }

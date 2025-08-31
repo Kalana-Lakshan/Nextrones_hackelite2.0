@@ -40,9 +40,17 @@ export const DesktopHeader = () => {
             {user ? (
               <>
                 {!isMobile && (
-                  <Button variant="ghost" onClick={() => navigate('/dashboard')}>
-                    Dashboard
-                  </Button>
+                  <>
+                    <Button variant="ghost" onClick={() => navigate('/')}>
+                      Home
+                    </Button>
+                    <Button variant="ghost" onClick={() => navigate('/dashboard')}>
+                      Dashboard
+                    </Button>
+                    <Button variant="ghost" onClick={() => navigate('/todolist')}>
+                      To-Do List
+                    </Button>
+                  </>
                 )}
                 <Button variant="outline" onClick={handleLogout} className="gap-2">
                   <LogOut className="h-4 w-4" />

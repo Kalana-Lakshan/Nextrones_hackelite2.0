@@ -6,6 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -17,7 +19,26 @@ import {
   Calendar,
   FileText,
   CalendarIcon,
-  Edit
+  Edit,
+  CheckCircle,
+  AlertCircle,
+  Info,
+  Shield,
+  Zap,
+  Target,
+  TrendingUp,
+  Lightbulb,
+  HelpCircle,
+  ExternalLink,
+  Star,
+  Award,
+  Rocket,
+  Settings as SettingsIcon,
+  Bell,
+  Palette,
+  Globe,
+  Lock,
+  Users
 } from 'lucide-react';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -148,6 +169,56 @@ export default function Settings() {
     }
   };
 
+  const calculateProfileCompletion = () => {
+    let completed = 0;
+    let total = 4;
+    
+    if (profile?.full_name) completed++;
+    if (graduationDate) completed++;
+    if (profile?.linkedin_connected || profile?.github_connected) completed++;
+    if (profile?.module_descriptor_uploaded) completed++;
+    
+    return Math.round((completed / total) * 100);
+  };
+
+  const getProfileCompletionMessage = () => {
+    const completion = calculateProfileCompletion();
+    if (completion === 0) return "Let's get started! Complete your profile to unlock personalized recommendations.";
+    if (completion < 50) return "Great start! Keep going to get better recommendations.";
+    if (completion < 100) return "Almost there! Complete the remaining steps for full benefits.";
+    return "Perfect! Your profile is complete and you're getting the best recommendations.";
+  };
+
+  const platformInfo = {
+    linkedin: {
+      name: "LinkedIn",
+      description: "Connect your professional experience and network",
+      benefits: ["Experience analysis", "Network insights", "Industry trends"],
+      icon: <Linkedin className="h-5 w-5" />,
+      color: "text-blue-600",
+      bgColor: "bg-blue-50",
+      borderColor: "border-blue-200"
+    },
+    github: {
+      name: "GitHub",
+      description: "Showcase your coding skills and projects",
+      benefits: ["Skill assessment", "Project portfolio", "Code quality insights"],
+      icon: <Github className="h-5 w-5" />,
+      color: "text-gray-800",
+      bgColor: "bg-gray-50",
+      borderColor: "border-gray-200"
+    },
+    coursera: {
+      name: "Coursera",
+      description: "Track your learning progress and certifications",
+      benefits: ["Course mapping", "Skill gaps", "Learning paths"],
+      icon: <BookOpen className="h-5 w-5" />,
+      color: "text-blue-700",
+      bgColor: "bg-blue-50",
+      borderColor: "border-blue-200"
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-subtle flex items-center justify-center">
@@ -159,6 +230,8 @@ export default function Settings() {
     );
   }
 
+  const profileCompletion = calculateProfileCompletion();
+
   return (
     <div className="min-h-screen bg-gradient-subtle">
       <div className="container mx-auto px-6 py-8">
@@ -168,6 +241,27 @@ export default function Settings() {
             <p className="text-muted-foreground">Configure your profile and account connections</p>
           </div>
 
+          {/* Profile Completion Banner */}
+          <Card className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-4">
+                <div className="bg-primary/20 p-3 rounded-full">
+                  <Target className="h-6 w-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-lg">Profile Completion</h3>
+                    <Badge variant={profileCompletion === 100 ? "default" : "secondary"}>
+                      {profileCompletion}% Complete
+                    </Badge>
+                  </div>
+                  <p className="text-muted-foreground mb-3">{getProfileCompletionMessage()}</p>
+                  <Progress value={profileCompletion} className="h-2" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Profile Information */}
           <Card>
             <CardHeader>
@@ -175,20 +269,22 @@ export default function Settings() {
                 <User className="h-5 w-5" />
                 Profile Information
               </CardTitle>
-              <CardDescription>Your basic profile details</CardDescription>
+              <CardDescription>Your basic profile details and career goals</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">Email Address</Label>
                   <Input id="email" value={user?.email || ''} disabled />
+                  <p className="text-xs text-muted-foreground mt-1">Your email is used for account management</p>
                 </div>
                 <div>
                   <Label htmlFor="full_name">Full Name</Label>
                   <Input id="full_name" value={profile?.full_name || ''} disabled />
+                  <p className="text-xs text-muted-foreground mt-1">Your name as it appears on your resume</p>
                 </div>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label>Graduation or Goal Year</Label>
                 <div className="flex gap-2">
                   <Popover>
@@ -208,6 +304,7 @@ export default function Settings() {
                         className="pointer-events-auto"
                       />
                       <div className="p-3 border-t">
+                        <p className="text-sm text-muted-foreground mb-2">Quick Select:</p>
                         <div className="grid grid-cols-4 gap-2">
                           {[2024, 2025, 2026, 2027].map((year) => (
                             <Button
@@ -227,6 +324,9 @@ export default function Settings() {
                     Save
                   </Button>
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  This helps us create a timeline for your career goals and learning path
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -234,31 +334,75 @@ export default function Settings() {
           {/* Account Connections */}
           <Card>
             <CardHeader>
-              <CardTitle>Account Connections</CardTitle>
-              <CardDescription>Connect your professional accounts for better recommendations</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <Globe className="h-5 w-5" />
+                Account Connections
+              </CardTitle>
+              <CardDescription>Connect your professional accounts for better recommendations and insights</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <ConnectionButton
-                icon={<Linkedin className="h-4 w-4" />}
-                label="LinkedIn"
-                connected={profile?.linkedin_connected}
-                currentUrl={profile?.linkedin_url}
-                onConnect={(url) => connectAccount('linkedin', url)}
-              />
-              <ConnectionButton
-                icon={<Github className="h-4 w-4" />}
-                label="GitHub"
-                connected={profile?.github_connected}
-                currentUrl={profile?.github_url}
-                onConnect={(url) => connectAccount('github', url)}
-              />
-              <ConnectionButton
-                icon={<BookOpen className="h-4 w-4" />}
-                label="Coursera"
-                connected={profile?.coursera_connected}
-                currentUrl={profile?.coursera_url}
-                onConnect={(url) => connectAccount('coursera', url)}
-              />
+            <CardContent className="space-y-6">
+              {Object.entries(platformInfo).map(([key, info]) => (
+                <div key={key} className={`p-4 rounded-lg border ${info.bgColor} ${info.borderColor}`}>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-3">
+                      <div className={`p-2 rounded-full ${info.bgColor}`}>
+                        {info.icon}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-semibold">{info.name}</h4>
+                          {profile?.[`${key}_connected`] && (
+                            <Badge variant="default" className="text-xs">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Connected
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-2">{info.description}</p>
+                        <div className="space-y-1">
+                          {info.benefits.map((benefit, idx) => (
+                            <div key={idx} className="flex items-center gap-2 text-xs">
+                              <CheckCircle className="h-3 w-3 text-green-500" />
+                              <span>{benefit}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {profile?.[`${key}_connected`] ? (
+                        <>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                              // Handle edit
+                            }}
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => window.open(profile?.[`${key}_url`], '_blank')}
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                          </Button>
+                        </>
+                      ) : (
+                        <Button 
+                          variant="outline" 
+                          onClick={() => {
+                            // Handle connect
+                          }}
+                        >
+                          Connect
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </CardContent>
           </Card>
 
@@ -267,18 +411,39 @@ export default function Settings() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                Module Descriptor
+                Academic Curriculum
               </CardTitle>
-              <CardDescription>Upload your curriculum/module descriptor for personalized recommendations</CardDescription>
+              <CardDescription>Upload your curriculum/module descriptor for personalized course recommendations</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {profile?.module_descriptor_uploaded ? (
-                  <div className="flex items-center gap-2 p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <FileText className="h-5 w-5 text-green-600" />
-                    <span className="text-green-800">Module descriptor uploaded</span>
+                  <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    <div>
+                      <span className="text-green-800 font-medium">Module descriptor uploaded</span>
+                      <p className="text-sm text-green-700">We're using this to personalize your learning recommendations</p>
+                    </div>
                   </div>
-                ) : null}
+                ) : (
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <Info className="h-5 w-5 text-blue-600 mt-0.5" />
+                      <div>
+                        <h4 className="font-medium text-blue-900 mb-1">Why upload your curriculum?</h4>
+                        <p className="text-sm text-blue-700 mb-3">
+                          By uploading your academic curriculum, we can better understand your current knowledge 
+                          and recommend courses that complement your studies.
+                        </p>
+                        <ul className="text-xs text-blue-700 space-y-1">
+                          <li>• Get course recommendations that align with your degree</li>
+                          <li>• Identify skill gaps in your current curriculum</li>
+                          <li>• Receive personalized learning paths</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <input
                   type="file"
                   accept=".pdf,.doc,.docx"
@@ -297,6 +462,87 @@ export default function Settings() {
                     </span>
                   </Button>
                 </label>
+                <p className="text-xs text-muted-foreground">
+                  Supported formats: PDF, DOC, DOCX. Maximum file size: 10MB
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Privacy & Security */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Privacy & Security
+              </CardTitle>
+              <CardDescription>Manage your data and privacy settings</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-3 rounded-lg border">
+                <div className="flex items-center gap-3">
+                  <Lock className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="font-medium text-sm">Data Privacy</p>
+                    <p className="text-xs text-muted-foreground">How we use your information</p>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm">
+                  Learn More
+                </Button>
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-lg border">
+                <div className="flex items-center gap-3">
+                  <Bell className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="font-medium text-sm">Notifications</p>
+                    <p className="text-xs text-muted-foreground">Manage your notification preferences</p>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm">
+                  Configure
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Help & Support */}
+          <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-blue-900">
+                <HelpCircle className="h-5 w-5" />
+                Need Help?
+              </CardTitle>
+              <CardDescription className="text-blue-700">
+                Get support and learn more about CareerPath
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="text-center p-4">
+                  <BookOpen className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                  <h4 className="font-semibold text-sm mb-1">Help Center</h4>
+                  <p className="text-xs text-blue-600 mb-2">Find answers to common questions</p>
+                  <Button variant="outline" size="sm" className="text-blue-600 border-blue-300">
+                    Browse Articles
+                  </Button>
+                </div>
+                <div className="text-center p-4">
+                  <Users className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                  <h4 className="font-semibold text-sm mb-1">Community</h4>
+                  <p className="text-xs text-blue-600 mb-2">Connect with other professionals</p>
+                  <Button variant="outline" size="sm" className="text-blue-600 border-blue-300">
+                    Join Forum
+                  </Button>
+                </div>
+                <div className="text-center p-4">
+                  <Zap className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                  <h4 className="font-semibold text-sm mb-1">Contact Support</h4>
+                  <p className="text-xs text-blue-600 mb-2">Get help from our team</p>
+                  <Button variant="outline" size="sm" className="text-blue-600 border-blue-300">
+                    Contact Us
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
