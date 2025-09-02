@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,8 @@ import { RoadmapGenerator } from '@/components/RoadmapGenerator';
 import { OnboardingFlow } from '@/components/OnboardingFlow';
 import { JobStorage } from '@/components/JobStorage';
 import { QuickActions } from '@/components/QuickActions';
+import { AppNav, AppNavInset } from '@/components/AppNav';
+import { SidebarProvider } from '@/components/ui/sidebar';
 import { 
   Upload, 
   Target,
@@ -37,6 +39,9 @@ import {
   Github,
   Linkedin
 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { TrendingNews } from '@/components/TrendingNews';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 export default function Dashboard() {
   const { user, session } = useAuth();
@@ -48,6 +53,9 @@ export default function Dashboard() {
   const [currentView, setCurrentView] = useState<'dashboard' | 'exploration' | 'roadmap'>('dashboard');
   const [selectedJobData, setSelectedJobData] = useState<any>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isPersonalizeOpen, setIsPersonalizeOpen] = useState(false);
 
   useEffect(() => {
     if (!session) {
@@ -91,6 +99,34 @@ export default function Dashboard() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Simple local job catalog for search (can be replaced with API)
+  const jobCatalog = useMemo(() => ([
+    { id: 'fe', title: 'Frontend Developer', company: 'Various', field: 'Software Development', compatibility: 90 },
+    { id: 'ds', title: 'Data Scientist', company: 'Various', field: 'Data Science', compatibility: 88 },
+    { id: 'fs', title: 'Full Stack Developer', company: 'Various', field: 'Software Development', compatibility: 85 },
+    { id: 'pm', title: 'Product Manager', company: 'Various', field: 'Product', compatibility: 80 },
+  ]), []);
+
+  const handleSearchJobs = () => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) { setSearchResults([]); return; }
+    setSearchResults(
+      jobCatalog.filter(j => j.title.toLowerCase().includes(q) || j.field.toLowerCase().includes(q))
+    );
+  };
+
+  const handleAddGoal = (job: any) => {
+    const analysis = {
+      compatibility: job.compatibility,
+      academicSkills: ['JavaScript', 'React', 'Data Structures', 'Git'],
+      softSkills: ['Problem Solving', 'Communication', 'Time Management']
+    };
+    if (typeof (window as any).saveJobToStorage === 'function') {
+      (window as any).saveJobToStorage({ job, analysis });
+      toast({ title: 'Goal added', description: `${job.title} saved to your goals.` });
     }
   };
 
@@ -300,7 +336,9 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-subtle">
+    <SidebarProvider>
+      <AppNav />
+      <AppNavInset className="bg-gradient-subtle">
       {/* Header */}
       <header className="bg-card border-b border-border">
         <div className="container mx-auto px-6 py-4">
@@ -322,73 +360,66 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto px-6 py-8 pb-24 max-w-[1400px]">
         <div className="max-w-6xl mx-auto space-y-8">
+          {/* Personalized News at top */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5" />
+                Personalized News
+              </CardTitle>
+              <CardDescription>News tailored to your interests</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TrendingNews />
+            </CardContent>
+          </Card>
+
           <div>
             <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
             <p className="text-muted-foreground">Explore career opportunities and track your progress</p>
           </div>
 
-          {/* Welcome Banner for New Users */}
-          {(!profile || !profile.onboarding_completed) && (
-            <Card className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20">
-              <CardContent className="pt-6">
-                <div className="flex items-start gap-4">
-                  <div className="bg-primary/20 p-3 rounded-full">
-                    <Rocket className="h-6 w-6 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg mb-2">Welcome to CareerPath! 🚀</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Let's get you started on your career journey. Complete your profile setup to unlock personalized recommendations.
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      <Button size="sm" onClick={() => navigate('/settings')}>
-                        Complete Profile
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={handleExploreCareer}>
-                        Explore Careers
-                      </Button>
+          {/* Search Jobs / Add Goals */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Briefcase className="h-5 w-5" />
+                Search and add job goals
+              </CardTitle>
+              <CardDescription>Find roles and save them to your goals</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col md:flex-row gap-3">
+                <Input
+                  placeholder="Search jobs or fields..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearchJobs()}
+                />
+                <Button onClick={handleSearchJobs}>Search</Button>
+              </div>
+              {searchResults.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  {searchResults.map((job) => (
+                    <div key={job.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <div className="font-medium text-sm">{job.title}</div>
+                        <div className="text-xs text-muted-foreground">{job.field}</div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className="text-xs">{job.compatibility}% Match</Badge>
+                        <Button size="sm" onClick={() => handleAddGoal(job)}>Add goal</Button>
+                      </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              )}
+            </CardContent>
+          </Card>
 
-          {/* Quick Actions */}
-          <QuickActions 
-            onExploreCareer={handleExploreCareer}
-            onViewTodos={() => navigate('/todolist')}
-            progress={{
-              overall: progress.length > 0 ? Math.round(progress.reduce((acc, p) => acc + p.current_level, 0) / progress.length) : 0,
-              completed: progress.filter(p => p.current_level >= p.target_level).length,
-              remaining: progress.filter(p => p.current_level < p.target_level).length,
-              upcomingTasks: []
-            }}
-          />
-
-          {/* Quick Tips Section */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {quickTips.map((tip, index) => (
-              <Card key={index} className="hover:shadow-lg transition-shadow">
-                <CardContent className="pt-6">
-                  <div className="flex items-start gap-3">
-                    <div className="bg-primary/10 p-2 rounded-full">
-                      <tip.icon className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-sm mb-1">{tip.title}</h4>
-                      <p className="text-xs text-muted-foreground mb-3">{tip.description}</p>
-                      <Button variant="outline" size="sm" onClick={() => navigate(tip.link)}>
-                        {tip.action}
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          {/* Removed welcome banner, quick actions, and quick tips as requested */}
 
           {/* Popular Career Paths */}
           <Card>
@@ -439,165 +470,13 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          {/* Job Storage */}
-          <JobStorage 
-            onSelectJob={(jobData) => {
-              setSelectedJobData(jobData);
-              setCurrentView('roadmap');
-            }}
-            onGenerateRoadmap={handleGenerateRoadmap}
-          />
+          {/* Removed Saved Roadmaps section from Dashboard as requested */}
 
-          {/* Recent Activity & Quick Actions */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="h-5 w-5" />
-                  Recent Activity
-                </CardTitle>
-                <CardDescription>Your latest achievements and updates</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {recentActivities.map((activity, index) => (
-                    <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                      <div className={`p-2 rounded-full bg-muted`}>
-                        <activity.icon className={`h-4 w-4 ${activity.color}`} />
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-sm font-medium">{activity.title}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {activity.platform} • {activity.date}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  {recentActivities.length === 0 && (
-                    <div className="text-center py-8">
-                      <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground text-sm">No recent activity</p>
-                      <p className="text-xs text-muted-foreground">Start exploring careers to see your progress</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+          {/* Removed recent activity and quick actions as requested */}
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Zap className="h-5 w-5" />
-                  Quick Actions
-                </CardTitle>
-                <CardDescription>Common tasks to boost your career</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <Upload className="h-4 w-4" />
-                  Upload Updated Resume
-                </Button>
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <Target className="h-4 w-4" />
-                  Set New Career Goal
-                </Button>
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <Map className="h-4 w-4" />
-                  Generate Learning Plan
-                </Button>
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <Users className="h-4 w-4" />
-                  Network with Professionals
-                </Button>
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <Play className="h-4 w-4" />
-                  Watch Career Tips
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+          {/* Removed progress overview as requested */}
 
-          {/* Recent Progress */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Your Progress
-              </CardTitle>
-              <CardDescription>Track your skill development and learning milestones</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {progress.slice(0, 3).map((skill) => (
-                  <div key={skill.id} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">{skill.skill_name}</span>
-                      <span className="text-sm text-muted-foreground">{skill.current_level}%</span>
-                    </div>
-                    <Progress value={skill.current_level} className="h-2" />
-                  </div>
-                ))}
-                {progress.length === 0 && (
-                  <div className="text-center py-8">
-                    <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-muted-foreground mb-2">No progress tracked yet</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Connect your accounts and start learning to see your progress
-                    </p>
-                    <div className="flex flex-wrap gap-2 justify-center">
-                      <Button size="sm" onClick={() => navigate('/settings')}>
-                        Connect Accounts
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={handleExploreCareer}>
-                        Explore Careers
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Help & Resources */}
-          <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-blue-900">
-                <HelpCircle className="h-5 w-5" />
-                Need Help?
-              </CardTitle>
-              <CardDescription className="text-blue-700">
-                Get started with these helpful resources
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="text-center p-4">
-                  <Play className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                  <h4 className="font-semibold text-sm mb-1">Video Tutorials</h4>
-                  <p className="text-xs text-blue-600 mb-2">Learn how to use CareerPath</p>
-                  <Button variant="outline" size="sm" className="text-blue-600 border-blue-300">
-                    Watch Now
-                  </Button>
-                </div>
-                <div className="text-center p-4">
-                  <BookOpen className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                  <h4 className="font-semibold text-sm mb-1">Help Center</h4>
-                  <p className="text-xs text-blue-600 mb-2">Find answers to common questions</p>
-                  <Button variant="outline" size="sm" className="text-blue-600 border-blue-300">
-                    Browse Articles
-                  </Button>
-                </div>
-                <div className="text-center p-4">
-                  <Users className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                  <h4 className="font-semibold text-sm mb-1">Community</h4>
-                  <p className="text-xs text-blue-600 mb-2">Connect with other professionals</p>
-                  <Button variant="outline" size="sm" className="text-blue-600 border-blue-300">
-                    Join Forum
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Removed Help & Resources section as requested */}
         </div>
       </div>
 
@@ -606,6 +485,51 @@ export default function Dashboard() {
         isOpen={showOnboarding} 
         onComplete={handleOnboardingComplete}
       />
-    </div>
+
+      {/* Personalized sliding panel */}
+      <Sheet open={isPersonalizeOpen} onOpenChange={setIsPersonalizeOpen}>
+        <SheetTrigger asChild>
+          <button
+            className="fixed bottom-24 right-4 md:right-8 z-40 rounded-full bg-primary text-primary-foreground shadow-lg px-4 py-3 text-sm"
+          >
+            Personalize
+          </button>
+        </SheetTrigger>
+        <SheetContent side="right" className="w-full sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle>Personalized insights</SheetTitle>
+          </SheetHeader>
+          <div className="mt-4 space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Profile snapshot</CardTitle>
+                <CardDescription>Quick view of your current status</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between"><span>Name</span><span className="font-medium">{profile?.full_name || user?.email}</span></div>
+                  <div className="flex justify-between"><span>Saved goals</span><span className="font-medium">Check Saved Roadmaps</span></div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Suggested next steps</CardTitle>
+                <CardDescription>Based on your recent activity</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button variant="outline" className="w-full justify-start" onClick={handleExploreCareer}>
+                  Explore a new role
+                </Button>
+                <Button variant="outline" className="w-full justify-start" onClick={() => navigate('/todolist')}>
+                  Review your tasks
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </SheetContent>
+      </Sheet>
+      </AppNavInset>
+    </SidebarProvider>
   );
 }

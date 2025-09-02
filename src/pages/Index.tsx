@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Search, Github, Linkedin, GraduationCap, Target, BookOpen, Briefcase, ArrowRight, UserPlus, Play, Star, Users, TrendingUp, CheckCircle, Zap, Lightbulb, Award, Clock, Shield, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,12 +9,21 @@ import { MobileNavigation } from "@/components/MobileNavigation";
 import { TrendingNews } from "@/components/TrendingNews";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("home");
   const [searchQuery, setSearchQuery] = useState("");
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
+
+  // Redirect logged-in users trying to access homepage to dashboard
+  useEffect(() => {
+    if (!loading && user) {
+      navigate('/dashboard');
+    }
+  }, [user, loading, navigate]);
 
   const features = [
     {

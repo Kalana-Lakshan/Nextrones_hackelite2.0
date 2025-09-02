@@ -43,6 +43,8 @@ import {
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
+import { AppNav, AppNavInset } from '@/components/AppNav';
+import { SidebarProvider } from '@/components/ui/sidebar';
 
 export default function Settings() {
   const { user, session } = useAuth();
@@ -233,8 +235,10 @@ export default function Settings() {
   const profileCompletion = calculateProfileCompletion();
 
   return (
-    <div className="min-h-screen bg-gradient-subtle">
-      <div className="container mx-auto px-6 py-8">
+    <SidebarProvider>
+      <AppNav />
+      <AppNavInset className="bg-gradient-subtle">
+      <div className="container mx-auto px-6 py-8 max-w-[1400px]">
         <div className="max-w-4xl mx-auto space-y-8">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Settings</h1>
@@ -548,7 +552,8 @@ export default function Settings() {
           </Card>
         </div>
       </div>
-    </div>
+      </AppNavInset>
+    </SidebarProvider>
   );
 }
 

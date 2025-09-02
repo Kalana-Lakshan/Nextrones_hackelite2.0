@@ -37,6 +37,8 @@ import {
   Timer,
   Sparkles
 } from 'lucide-react';
+import { AppNav, AppNavInset } from '@/components/AppNav';
+import { SidebarProvider } from '@/components/ui/sidebar';
 
 export default function TodoList() {
   const { user, session } = useAuth();
@@ -242,7 +244,9 @@ export default function TodoList() {
   ).length;
 
   return (
-    <div className="min-h-screen bg-gradient-subtle">
+    <SidebarProvider>
+      <AppNav />
+      <AppNavInset className="bg-gradient-subtle">
       {/* Header */}
       <header className="bg-card border-b border-border">
         <div className="container mx-auto px-6 py-4">
@@ -265,7 +269,7 @@ export default function TodoList() {
         </div>
       </header>
 
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto px-6 py-8 max-w-[1400px]">
         <div className="max-w-6xl mx-auto space-y-8">
           {/* Motivational Banner */}
           <Card className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20">
@@ -637,6 +641,7 @@ export default function TodoList() {
           </div>
         </div>
       </div>
-    </div>
+      </AppNavInset>
+    </SidebarProvider>
   );
 }

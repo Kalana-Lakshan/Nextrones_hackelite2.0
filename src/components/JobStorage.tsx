@@ -5,10 +5,12 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Trash2, Eye, ArrowRight } from 'lucide-react';
 
-interface SavedJob {
+interface SavedItem {
   id: string;
-  job: any;
-  analysis: any;
+  type: 'job' | 'pathway';
+  job?: any;
+  pathway?: any;
+  analysis?: any;
   savedAt: Date;
 }
 
@@ -18,7 +20,12 @@ interface JobStorageProps {
 }
 
 export const JobStorage = ({ onSelectJob, onGenerateRoadmap }: JobStorageProps) => {
-  const [savedJobs, setSavedJobs] = useState<SavedJob[]>([]);
+  const [savedJobs, setSavedJobs] = useState<SavedItem[]>([]);
+  const defaultRoadmaps = [
+    { id: 'default-fe', title: 'Frontend Developer Roadmap', category: 'Software Development', description: 'HTML/CSS → JS/TS → React → Testing → Performance' },
+    { id: 'default-ds', title: 'Data Scientist Roadmap', category: 'Data', description: 'Python → Stats → ML → SQL → Deployment' },
+    { id: 'default-devops', title: 'DevOps Engineer Roadmap', category: 'Cloud', description: 'Linux → Networking → CI/CD → Containers → IaC' },
+  ];
 
   useEffect(() => {
     loadSavedJobs();
@@ -35,15 +42,17 @@ export const JobStorage = ({ onSelectJob, onGenerateRoadmap }: JobStorageProps) 
     }
   };
 
-  const saveJob = (jobData: any) => {
-    const newJob: SavedJob = {
+  const saveItem = (data: { type: 'job' | 'pathway'; job?: any; pathway?: any; analysis?: any; }) => {
+    const newItem: SavedItem = {
       id: Date.now().toString(),
-      job: jobData.job,
-      analysis: jobData.analysis,
+      type: data.type,
+      job: data.job,
+      pathway: data.pathway,
+      analysis: data.analysis,
       savedAt: new Date()
     };
 
-    const updated = [...savedJobs, newJob];
+    const updated = [...savedJobs, newItem];
     setSavedJobs(updated);
     localStorage.setItem('savedJobs', JSON.stringify(updated));
   };
@@ -54,110 +63,152 @@ export const JobStorage = ({ onSelectJob, onGenerateRoadmap }: JobStorageProps) 
     localStorage.setItem('savedJobs', JSON.stringify(updated));
   };
 
-  // Expose save function globally
+  // Expose save functions globally (backward compatible)
   useEffect(() => {
-    (window as any).saveJobToStorage = saveJob;
+    (window as any).saveItemToStorage = saveItem;
+    (window as any).saveJobToStorage = (jobData: any) => saveItem({ type: 'job', job: jobData.job, analysis: jobData.analysis });
   }, [savedJobs]);
 
-  if (savedJobs.length === 0) {
+  const savedRoadmaps = savedJobs.filter((item) => item.type === 'pathway');
+
+  if (savedRoadmaps.length === 0) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Saved Jobs</CardTitle>
-          <CardDescription>Jobs you've analyzed will appear here for quick access</CardDescription>
+          <CardTitle>Saved Roadmaps</CardTitle>
+          <CardDescription>Your saved roadmaps will appear here. Explore defaults below.</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-center text-muted-foreground py-8">
-            No saved jobs yet. Analyze a job to save it here.
-          </p>
+          <div className="space-y-3">
+            {defaultRoadmaps.map((roadmap) => (
+              <div key={roadmap.id} className="flex items-center justify-between p-3 border rounded-lg">
+                <div>
+                  <h4 className="font-medium">{roadmap.title}</h4>
+                  <p className="text-sm text-muted-foreground">{roadmap.category}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{roadmap.description}</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onGenerateRoadmap({ job: roadmap, analysis: {} })}
+                  >
+                    Generate
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => (window as any).saveItemToStorage?.({ type: 'pathway', pathway: roadmap })}
+                  >
+                    Save
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Saved Jobs ({savedJobs.length})</CardTitle>
-        <CardDescription>Previously analyzed career opportunities</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          {savedJobs.map((savedJob) => (
-            <div key={savedJob.id} className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="flex-1">
-                <h4 className="font-medium">{savedJob.job.title}</h4>
-                <p className="text-sm text-muted-foreground">{savedJob.job.company}</p>
-                <div className="flex items-center gap-2 mt-1">
-                  <Badge variant="secondary" className="text-xs">
-                    {savedJob.analysis.compatibility}% Match
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">
-                    Saved {savedJob.savedAt.toLocaleDateString()}
-                  </span>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Saved Roadmaps ({savedRoadmaps.length})</CardTitle>
+          <CardDescription>Previously saved learning pathways</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {savedRoadmaps.map((savedJob) => (
+              <div key={savedJob.id} className="flex items-center justify-between p-3 border rounded-lg">
+                <div className="flex-1">
+                  <h4 className="font-medium">{savedJob.pathway?.title}</h4>
+                  <p className="text-sm text-muted-foreground">{savedJob.pathway?.category}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    {savedJob.analysis && (
+                      <Badge variant="secondary" className="text-xs">
+                        {savedJob.analysis.compatibility}% Match
+                      </Badge>
+                    )}
+                    <span className="text-xs text-muted-foreground">
+                      Saved {savedJob.savedAt.toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl">
+                      <DialogHeader>
+                        <DialogTitle>{savedJob.pathway?.title}</DialogTitle>
+                        <DialogDescription>{savedJob.pathway?.description}</DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="flex gap-2">
+                          <Button 
+                            onClick={() => onGenerateRoadmap({ job: savedJob.pathway, analysis: savedJob.analysis || {} })}
+                            className="flex-1"
+                          >
+                            Generate Roadmap
+                            <ArrowRight className="h-4 w-4 ml-2" />
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeJob(savedJob.id)}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
-              <div className="flex gap-2">
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl">
-                    <DialogHeader>
-                      <DialogTitle>{savedJob.job.title}</DialogTitle>
-                      <DialogDescription>{savedJob.job.company}</DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <h5 className="font-medium mb-2">Academic Skills Needed</h5>
-                          <div className="space-y-1">
-                            {savedJob.analysis.academicSkills.slice(0, 5).map((skill: string) => (
-                              <Badge key={skill} variant="outline" className="text-xs mr-1 mb-1">
-                                {skill}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                        <div>
-                          <h5 className="font-medium mb-2">Soft Skills Needed</h5>
-                          <div className="space-y-1">
-                            {savedJob.analysis.softSkills.slice(0, 5).map((skill: string) => (
-                              <Badge key={skill} variant="outline" className="text-xs mr-1 mb-1">
-                                {skill}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button 
-                          onClick={() => onGenerateRoadmap({ job: savedJob.job, analysis: savedJob.analysis })}
-                          className="flex-1"
-                        >
-                          Generate Roadmap
-                          <ArrowRight className="h-4 w-4 ml-2" />
-                        </Button>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeJob(savedJob.id)}
-                  className="text-destructive hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+      <Card className="mt-4">
+        <CardHeader>
+          <CardTitle>Default Roadmaps</CardTitle>
+          <CardDescription>Start quickly with curated roadmaps</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {defaultRoadmaps.map((roadmap) => (
+              <div key={roadmap.id} className="flex items-center justify-between p-3 border rounded-lg">
+                <div>
+                  <h4 className="font-medium">{roadmap.title}</h4>
+                  <p className="text-sm text-muted-foreground">{roadmap.category}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{roadmap.description}</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onGenerateRoadmap({ job: roadmap, analysis: {} })}
+                  >
+                    Generate
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => (window as any).saveItemToStorage?.({ type: 'pathway', pathway: roadmap })}
+                  >
+                    Save
+                  </Button>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </>
   );
 };
 
