@@ -1,8 +1,6 @@
-# Welcome to your project
+# Welcome to Skillora
 
 ## Project info
-
-**URL**: https://lovable.dev/projects/e0506977-0524-451a-ac70-4519c13ae6f6
 
 ## How can I edit this code?
 
