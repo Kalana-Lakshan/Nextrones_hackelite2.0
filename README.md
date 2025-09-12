@@ -14,20 +14,27 @@ The only requirement is having Node.js & npm installed – [install with nvm](ht
 Follow these steps:
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
+# 1-Clone the repository from GitHub to your local machine
 git clone https://github.com/Kalana-Lakshan/Nextrones_hackelite2.0.git
 
-# Step 2: Navigate to the project directory.
+# 2-Go into the project folder
 cd Nextrones_hackelite2.0
 
-# Step 3: Install the necessary dependencies.
-npm i
+# 3-Install the project’s base dependencies from package.json
+npm install
 
-#change the branch to branch3.
+# 4-saves your changes
+git stash
+
+# 5-(Only if you want branch3) Switch to the branch3 branch
 git checkout branch3
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# 6-Install any missing packages not in the repo (Supabase helpers + Octokit)
+npm install @supabase/auth-helpers-react @octokit/rest
+
+# 7-Start the development server (Vite)
 npm run dev
+
 ```
 
 ### Edit a file directly in GitHub
