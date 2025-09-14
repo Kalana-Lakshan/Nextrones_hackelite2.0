@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+.env
+
+VITE_GITHUB_CLIENT_ID=your_github_client_id_here

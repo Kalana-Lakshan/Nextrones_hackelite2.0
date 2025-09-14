@@ -1,4 +1,6 @@
+// @ts-ignore
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+// @ts-ignore
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
@@ -48,7 +50,7 @@ interface GitHubContribution {
   updated_at: string;
 }
 
-serve(async (req) => {
+serve(async (req: Request) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -58,6 +60,7 @@ serve(async (req) => {
     const { username, userId } = await req.json()
 
     if (!username || !userId) {
+      console.error('Missing username or userId:', { username, userId });
       return new Response(
         JSON.stringify({ error: 'Username and userId are required' }),
         { 
@@ -68,15 +71,18 @@ serve(async (req) => {
     }
 
     // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  // @ts-ignore
+  const supabaseUrl = typeof Deno !== 'undefined' ? Deno.env.get('SUPABASE_URL') : '';
+  // @ts-ignore
+  const supabaseKey = typeof Deno !== 'undefined' ? Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') : '';
     const supabase = createClient(supabaseUrl, supabaseKey)
 
     // Verify user exists
     const { data: user, error: userError } = await supabase.auth.admin.getUserById(userId)
     if (userError || !user) {
+      console.error('Invalid user:', userError);
       return new Response(
-        JSON.stringify({ error: 'Invalid user' }),
+        JSON.stringify({ error: 'Invalid user', details: userError }),
         { 
           status: 401, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -87,8 +93,9 @@ serve(async (req) => {
     // Fetch GitHub user data
     const githubResponse = await fetch(`https://api.github.com/users/${username}`)
     if (!githubResponse.ok) {
+      console.error('GitHub user not found:', username);
       return new Response(
-        JSON.stringify({ error: 'GitHub user not found' }),
+        JSON.stringify({ error: 'GitHub user not found', details: await githubResponse.text() }),
         { 
           status: 404, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -99,11 +106,14 @@ serve(async (req) => {
     const githubUserData = await githubResponse.json()
 
     // Check if GitHub user already exists
-    const { data: existingUser } = await supabase
+    const { data: existingUser, error: existingUserError } = await supabase
       .from('github_users')
       .select('*')
       .eq('github_id', githubUserData.id)
       .single()
+    if (existingUserError) {
+      console.error('Error checking existing GitHub user:', existingUserError);
+    }
 
     const githubUser: GitHubUser = {
       user_id: userId,
@@ -127,8 +137,10 @@ serve(async (req) => {
         .eq('id', existingUser.id)
         .select()
         .single()
-      
-      if (error) throw error
+      if (error) {
+        console.error('Error updating GitHub user:', error);
+        throw error
+      }
       storedUser = data
     } else {
       // Insert new user
@@ -137,8 +149,10 @@ serve(async (req) => {
         .insert(githubUser)
         .select()
         .single()
-      
-      if (error) throw error
+      if (error) {
+        console.error('Error inserting GitHub user:', error);
+        throw error
+      }
       storedUser = data
     }
 
@@ -146,7 +160,6 @@ serve(async (req) => {
     const reposResponse = await fetch(`https://api.github.com/users/${username}/repos?per_page=100&type=all`)
     if (reposResponse.ok) {
       const repositories = await reposResponse.json()
-      
       for (const repo of repositories) {
         try {
           // Get languages for each repository
@@ -181,21 +194,26 @@ serve(async (req) => {
           }
 
           // Upsert repository
-          await supabase
+          const { error: repoUpsertError } = await supabase
             .from('github_repositories')
             .upsert(repository, { onConflict: 'repo_id' })
+          if (repoUpsertError) {
+            console.error(`Error storing repository ${repo.name}:`, repoUpsertError);
+          }
         } catch (repoError) {
           console.error(`Error processing repository ${repo.name}:`, repoError)
           continue
         }
       }
+    } else {
+      console.error('Error fetching repositories:', await reposResponse.text());
     }
 
     // Extract skills from GitHub data
     const skills = await extractSkillsFromGitHubData(supabase, storedUser.id)
 
     // Update user profile with GitHub connection and skills
-    await supabase
+    const { error: profileUpdateError } = await supabase
       .from('profiles')
       .update({ 
         github_connected: true,
@@ -204,6 +222,9 @@ serve(async (req) => {
         updated_at: new Date().toISOString()
       })
       .eq('user_id', userId)
+    if (profileUpdateError) {
+      console.error('Error updating user profile:', profileUpdateError);
+    }
 
     return new Response(
       JSON.stringify({
@@ -221,7 +242,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: 'Failed to sync GitHub data',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : JSON.stringify(error)
       }),
       { 
         status: 500, 
