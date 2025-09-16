@@ -16,27 +16,17 @@ export default function GitHubIntegration() {
       setIsLoading(false);
       return;
     }
-    // Example GitHub user data
-    const githubUser = {
-      user_id: user.id, // <-- required for RLS
-      github_id: Math.floor(Math.random() * 1000000),
-      username: 'exampleuser',
-      avatar_url: 'https://avatars.githubusercontent.com/u/1?v=4',
-      bio: 'Sample bio',
-      public_repos: 10,
-      followers: 5,
-      following: 2,
-      html_url: 'https://github.com/exampleuser',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+    // Import and call the real GitHub sync service
     try {
-      const { error } = await supabase.from('github_users').insert([githubUser]);
-      if (error) {
-        setErrorMessage('Supabase insert error: ' + error.message);
+      // Import the syncUserData function directly
+      const { syncUserData } = await import('../services/githubService');
+      const username = prompt('Enter your GitHub username:');
+      if (!username) {
+        setErrorMessage('GitHub username is required.');
         setIsLoading(false);
         return;
       }
+      await syncUserData(username, user.id);
       setSuccess(true);
     } catch (err) {
       setErrorMessage('Unexpected error: ' + (err.message || err));

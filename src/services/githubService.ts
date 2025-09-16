@@ -1,7 +1,7 @@
 import { Octokit } from '@octokit/rest';
 import { supabase, GitHubUser, GitHubRepository, GitHubContribution } from '../lib/supabaseClient';
 
-export class GitHubService {
+class GitHubService {
   private octokit: Octokit;
 
   constructor() {
@@ -340,3 +340,6 @@ export class GitHubService {
     }
   }
 }
+
+export const githubService = new GitHubService();
+export const syncUserData = githubService.syncUserData.bind(githubService);
